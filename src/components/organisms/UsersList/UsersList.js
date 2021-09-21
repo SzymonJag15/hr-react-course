@@ -1,16 +1,49 @@
-import React from 'react';
-import { users } from 'data/users';
+import React, { useEffect, useState } from 'react';
+import { users as usersData } from 'data/users';
 import UsersListItem from 'components/molecules/UsersListItem/UsersListItem';
-import { Wrapper } from './UsersList.styles';
+import { StyledList, Wrapper } from './UsersList.styles';
 
-const UsersList = () => (
-  <Wrapper>
-    <ul>
-      {users.map((userData, index) => (
-        <UsersListItem index={index} userData={userData} />
-      ))}
-    </ul>
-  </Wrapper>
-);
+const mockAPI = (success) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (usersData) {
+        resolve([...usersData]);
+      } else {
+        reject({ message: 'Error' });
+      }
+    }, 2000);
+  });
+};
+
+const UsersList = () => {
+  const [users, setUsers] = useState([]);
+  const [isLoading, setLoadingState] = useState(false);
+
+  useEffect(() => {
+    setLoadingState(true);
+    mockAPI()
+      .then((data) => {
+        setLoadingState(false);
+        setUsers(data);
+      })
+      .catch((err) => console.log(err));
+  }, []);
+
+  const deleteUser = (name) => {
+    const filteredUser = users.filter((user) => user.name !== name);
+    setUsers(filteredUser);
+  };
+
+  return (
+    <Wrapper>
+      <h1>{isLoading ? 'Loading...' : 'Users list:'}</h1>
+      <StyledList>
+        {users.map((userData, index) => (
+          <UsersListItem deleteUser={() => deleteUser(userData.name)} index={index} userData={userData} />
+        ))}
+      </StyledList>
+    </Wrapper>
+  );
+};
 
 export default UsersList;
